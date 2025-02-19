@@ -17,7 +17,7 @@ def fake_batch(point, results):
 
 
 def to_batch(outputs, length=None):
-    # scan output -> dict of ndarrays
+    # scan output -> dict of arrays
 
     points, results, _ = outputs
 
@@ -26,9 +26,11 @@ def to_batch(outputs, length=None):
 
     batch = {}
 
-    # todo: make this more general purpose to also support cell, etc
     batch["positions"] = np.array(points.R)
     batch["momenta"] = np.array(points.P)
+
+    if hasattr(points, "cell"):
+        batch["cell"] = np.array(points.cell)
 
     for key, value in results.items():
         batch[key] = np.array(value)

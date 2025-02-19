@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.7"
-# glp =  { git = "https://github.com/sirmarcel/glp.git", branch = "main" }
+glp =  { git = "https://github.com/sirmarcel/glp.git", branch = "main" }
 comms =  { git = "https://github.com/sirmarcel/comms.git", branch = "main" }
 stepson =  { git = "https://gitlab.com/sirmarcel/stepson.git", branch = "main" }
 fhi-vibes = { git = "https://gitlab.com/vibes-developers/vibes.git", branch = "master" }

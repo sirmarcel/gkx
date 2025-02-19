@@ -12,3 +12,5 @@ Outputs are written as subsequently numbered `.nc` files of uniform size to a sp
 
 - `batch`: bunch of timesteps that get run in one go on the GPU with `lax.scan`
 - `chunk`: larger bunch of timesteps that get saved to disk as one dataset. We try very hard to make them uniform in size. Chunk size should be picked such that they fit easily into memory, and such that recomputing them is not ridiculously expensive, as this is also the level at which we implement restarts.
+
+TODO: we currently have a precision problem: `batch`/`chunk`/`outputs` refer to both a "concept" and a particular way to arrange data. this is potentially very confusing. we should rename `to_batch` to something else, probably

@@ -1,6 +1,7 @@
 """Run NVE MD."""
 
 from jax import lax, jit
+import jax.numpy as jnp
 
 import numpy as np
 from ase.units import fs
@@ -15,6 +16,8 @@ from gkx.utils.trees import tree_slice
 from .dataset import chunk_to_dataset
 from .batcher import to_batch, fake_batch
 from .chunker import Chunker
+from .logger import Logger, ReportingState
+from .diagnostics import print_diagnostics
 
 
 def run(
@@ -30,6 +33,8 @@ def run(
     chunk_size=2500,
     initial_step=0,
     initial_chunk=0,
+    logger=Logger(),
+    dtype=jnp.float32,
 ):
     # todo: be more forgiving
     assert maxsteps % chunk_size == 0
@@ -40,11 +45,12 @@ def run(
     reporter.step("setup")
 
     dynamics_fn = get_dynamics(potential, calculator, {"verlet": {"dt": dt * fs}})
-    initial = atoms_to_input(initial_atoms)
+    initial = atoms_to_input(initial_atoms, dtype=dtype)
     dynamics, state = dynamics_fn(*initial)
     step_fn = jit(dynamics.step)
 
     chunker = Chunker(chunk_size)
+    reporting_state = ReportingState(dt, initial_step, initial_chunk, maxsteps, chunker)
 
     reporter.step(f"md ", spin=False)
     n_step = initial_step
@@ -54,6 +60,7 @@ def run(
     if n_step == 0:
         # make sure to save the initial step
         chunker.submit(fake_batch(state.point, state.results))
+        print_diagnostics(md_state=state)
 
     while n_step < maxsteps:
         reporter.tick("🚀 " + state_str)
@@ -86,12 +93,10 @@ def run(
         if batch is not None:
             chunk = chunker.submit(batch)
 
-        time_per_step = reporter.timer_step() / chunker.count
-        current_steps = chunker.count + initial_step
-        remaining_steps = maxsteps - current_steps
-        remaining_time = time_per_step * remaining_steps
+        reporting_state.update(reporter.timer_step())
+        logger(reporting_state)
 
-        state_str = f"{current_steps}/{maxsteps} (ETA: {(remaining_time/60):.1f}min) ({time_per_step*1000:.0f}ms/step)"
+        state_str = reporting_state.state_str
 
         if chunk is None:
             continue
@@ -113,9 +118,19 @@ def run(
             dataset.to_netcdf(tmpfile)
             tmpfile.replace(outfolder / f"{n_chunk:06d}.nc")
 
+            comms.talk(
+                f"completed chunk {n_chunk} "
+                + f"(ETA: {(reporting_state.remaining_time/60):.1f}min) ({reporting_state.time_per_step*1000:.0f}ms/step)",
+                full=True,
+            )
+            reporting_state.update(reporter.timer_step(), last_dataset=dataset)
+            print_diagnostics(md_state=state)
+
             n_step += chunk_size
             n_chunk += 1
 
-    reporter.tick("(✨) " + state_str)
+    reporting_state.update(reporter.timer_step())
+    logger.log(reporting_state)
 
-    reporter.done()
+    reporter.tick("(✨) " + state_str)
+    reporter.done(f"done at {reporting_state.time_per_step*1000:.0f}ms/step")

@@ -1,0 +1,23 @@
+nve_re_hf:
+  dt: 1.0
+  every: 4
+  calculator: {"atom_pair": {"heat_flux": True, "convective": True, "skin": 0.5}}
+  batch_size: 16
+  full_frame_every: 32
+maxsteps: 20000
+chunk_size: 128
+batch_size: 16
+potential:
+  lennard_jones:
+    sigma: 3.405
+    epsilon: 0.01042
+    cutoff: 9.0
+    onset: 8.0
+
+calculator:
+  atom_pair:
+    skin: 0.5
+files:
+  geometry: geometry.in
+  supercell: geometry.in.supercell
+  primitive: geometry.in.primitive
