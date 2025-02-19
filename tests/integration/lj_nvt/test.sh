@@ -1,2 +1,2 @@
 gkx run md md.yaml
-rm -r trajectory/
+rm -r md/

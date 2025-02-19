@@ -23,7 +23,11 @@ def chunk_to_dataset(
     time = dt * np.arange(start_idx, start_idx + length, dtype=float)
     time = {keys.time: time}
 
-    chunk["velocities"] = chunk["momenta"] / reference_atoms.get_masses()[None, :, None]
+    chunk["velocities"] = chunk["momenta"] / reference_atoms.get_masses()[
+        None, :, None
+    ].astype(
+        chunk["momenta"].dtype
+    )  # for consistency with forces, etc
     del chunk["momenta"]
 
     final_data = {}

@@ -37,3 +37,25 @@ class TestTrees(TestCase):
         unsqueezed = tree_unsqueeze(tree)
 
         np.testing.assert_array_equal(unsqueezed["test"], np.array([[0]]))
+
+    def test_split_first_dim(self):
+        tree = {
+            "test": np.array([0, 1, 2, 3]),
+            "test2": np.array([[0, 1], [2, 3], [4, 5], [6, 7]]),
+        }
+
+        target = {
+            "test": np.array([[0, 1], [2, 3]]),
+            "test2": np.array([[[0, 1], [2, 3]], [[4, 5], [6, 7]]]),
+        }
+
+        split = tree_split_first_dim(tree, 2)
+
+        np.testing.assert_array_equal(split["test"], target["test"])
+        np.testing.assert_array_equal(split["test2"], target["test2"])
+
+        merged = tree_merge_first_dim(split)
+
+        np.testing.assert_array_equal(merged["test"], tree["test"])
+        np.testing.assert_array_equal(merged["test2"], tree["test2"])
+

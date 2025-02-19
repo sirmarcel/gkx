@@ -28,7 +28,8 @@ def out():
 @click.option("--offset", default=None, type=int, help="start from offset")
 @click.option("--spacing", default=None, type=int, help="use only every nth step")
 @click.option("--freq", default=1.0, type=float, help="lowest characteristic frequency")
-def gk(file, outfile, outfolder, maxsteps, offset, spacing, freq):
+@click.option("--force", default=False, is_flag=True, help="force recompute")
+def gk(file, outfile, outfolder, maxsteps, offset, spacing, freq, force):
     """perform greenkubo analysis for heat flux dataset in FILE"""
     from stepson import comms
     from stepson.green_kubo import get_kappa_dataset
@@ -57,7 +58,7 @@ def gk(file, outfile, outfolder, maxsteps, offset, spacing, freq):
     if freq is not None:
         outfile = outfile.parent / f"{outfile.stem}.freq_{freq:.2f}.nc"
 
-    if outfile.is_file():
+    if outfile.is_file() and not force:
         comms.warn(f"{outfile} exists, skipping")
         reporter.done()
         return None

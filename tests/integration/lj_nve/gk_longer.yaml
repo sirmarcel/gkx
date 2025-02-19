@@ -1,6 +1,6 @@
 nve:
   dt: 4.0
-maxsteps: 2000
+maxsteps: 200
 chunk_size: 25
 batch_size: 3
 potential:
@@ -11,8 +11,7 @@ potential:
     onset: 8.0
 
 calculator:
-  atom_pair:
-    heat_flux: True
+  heat_flux_unfolded:
     convective: True
 files:
   geometry: geometry.in
